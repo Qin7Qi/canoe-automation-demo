@@ -1,0 +1,40 @@
+# CANoe 编译产物
+*.cbf
+*.cfg.bak
+*.cfg.~*
+
+# 日志与测量数据
+*.log
+*.blf
+*.asc
+*.mf4
+*.mdf
+Logging/
+Reports/
+TestReport.xml
+
+# Python 产物
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+.venv/
+
+# 敏感信息
+*.env
+secrets/
+*.key
+*.pem
+
+# IDE / 系统文件
+.vs/
+.vscode/
+*.user
+*.suo
+Thumbs.db
+.DS_Store
+
+# 大文件（固件单独管理）
+*.hex
+*.s19
+*.bin
