@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Tester.vxt
+
+  适用于CANoe12.0的XML测试模块
+  XML拥有：
+    -测试组/测试用例层次结构
+    -执行顺序
+    -通过变体选择测试用例
+    -CAPL参数值
+  CAPL文件拥有：
+    -实际测试逻辑
+    -检查、计时和报告步骤
+  必须将CAPL组件添加到此XML测试模块中
+  测试设置->模块->组件->Tester.can。
+-->
+<testmodule xmlns="http://www.vector-informatik.de/CANoe/TestModule/1.27"
+            title="Tester"
+            version="1.0">
+
+  <description>消息规范与功能测试，以 CAPL 测试单元的形式实现，并由 XML 进行调度编排。</description>
+
+  <variants>
+    <variant name="All">所有测试用例</variant>
+    <variant name="Smoke">冒烟测试</variant>
+    <variant name="Cycle">周期时间测试</variant>
+    <variant name="DLC">DLC 测试</variant>
+    <variant name="Undefined">未定义消息测试</variant>
+    <variant name="Function">功能测试</variant>
+  </variants>
+
+  <!-- =====================================================================
+       Group 1: 周期
+       ===================================================================== -->
+  <testgroup title="Check msg cycle time" ident="G1">
+    <description>报文周期检测的测试用例</description>
+
+    <preparation>
+      <capltestfunction name="InitTestCondition"
+                        title="Init test condition"/>
+    </preparation>
+
+    <capltestcase name="CheckMsgEngineData"
+                  title="TC-1: Check cycle time of msg EngineData"
+                  ident="TC-1"
+                  variants="Cycle Smoke All"/>
+
+    <capltestcase name="CheckMsgVehicledata"
+                  title="TC-2: Check cycle time of msg VehicleData"
+                  ident="TC-2"
+                  variants="Cycle All"/>
+
+    <capltestcase name="CheckMsgGear_Info"
+                  title="TC-3: Check cycle time of msg Gear_Info"
+                  ident="TC-3"
+                  variants="Cycle All"/>
+
+    <capltestcase name="CheckMsgIgnition_Info"
+                  title="TC-4: Check cycle time of msg Ignition_Info"
+                  ident="TC-4"
+                  variants="Cycle All"/>
+
+    <capltestcase name="CheckMsgLight_Info"
+                  title="TC-5: Check cycle time of msg Light_Info"
+                  ident="TC-5"
+                  variants="Cycle All"/>
+  </testgroup>
+
+  <!-- =====================================================================
+       Group 2: DLC
+       ===================================================================== -->
+  <testgroup title="Check msg DLC" ident="G2">
+    <description>检测报文长度的测试用例</description>
+
+    <preparation>
+      <capltestfunction name="InitTestCondition"
+                        title="Init test condition"/>
+    </preparation>
+
+    <capltestcase name="CheckDLCLock_Info"
+                  title="TC-6: Check msg DLC of Lock_Info"
+                  ident="TC-6"
+                  variants="DLC Smoke All"/>
+  </testgroup>
+
+  <!-- =====================================================================
+       Group 3: 未定义的消息
+       ===================================================================== -->
+  <testgroup title="Check undefined msg" ident="G3">
+    <description>检测未定义信号的测试用例</description>
+
+    <preparation>
+      <capltestfunction name="InitTestCondition"
+                        title="Init test condition"/>
+    </preparation>
+
+    <capltestcase name="CheckUndefinedMessage"
+                  title="TC-7: Check CAN channel for undefined messages"
+                  ident="TC-7"
+                  variants="Undefined Smoke All"/>
+  </testgroup>
+
+  <!-- =====================================================================
+       Group 4: 功能测试
+       ===================================================================== -->
+  <testgroup title="Function Test" ident="G4">
+    <description>功能测试的测试用例</description>
+
+    <preparation>
+      <capltestfunction name="InitTestCondition"
+                        title="Init test condition"/>
+    </preparation>
+
+    <capltestcase name="CheckEngine_Speed"
+                  title="TC-8: Check Engine Speed Value"
+                  ident="TC-8"
+                  variants="Function Smoke All"/>
+
+    <completion>
+      <capltestfunction name="ResetEngineSpeed"
+                        title="Reset engine speed"/>
+    </completion>
+  </testgroup>
+
+</testmodule>

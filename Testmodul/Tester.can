@@ -1,0 +1,222 @@
+/*@!Encoding:65001*/
+/*
+* Tester.can
+*
+* 用于 XML 测试模块 Tester.vxt 的 CAPL 测试库。 
+*
+* 重要提示：
+*   - 本文件不得包含 MainTest() 函数。 
+*   - 由 XML 调用的测试用例必须声明为“export testcase”。 
+*   - 由 XML 调用的辅助函数必须声明为“export testfunction”。 
+*   - XML 测试模块负责定义层级结构、执行顺序及测试选择；本文件
+*     仅包含测试逻辑。 
+*/
+
+includes
+{
+}
+
+variables
+{
+  const long kMIN_CYCLE_TIME       = 40;
+  const long kMAX_CYCLE_TIME       = 60;
+  const long kLIGHT_MIN_CYCLE_TIME = 490;
+  const long kLIGHT_MAX_CYCLE_TIME = 510;
+  const long kTIMEOUT              = 4000;
+
+  int gUndefinedMsgCheckResult;
+}
+
+/* -------------------------------------------------------------------------
+ *初始化/清理函数，由 XML 中的 `<preparation>` 和 `<completion>` 块通过 `<capltestfunction>` 进行调用。
+ * ------------------------------------------------------------------------- */
+
+export testfunction InitTestCondition()
+{
+  @Vehicle_Key::Unlock_Car = 1;
+  @Vehicle_Key::Car_Driver = 0;
+  @Vehicle_Key::Key_State  = 2;
+  testWaitForTimeout(500);
+}
+
+export testfunction ResetEngineSpeed()
+{
+  @Vehicle_Control::Eng_Speed = 0;
+}
+
+/* -------------------------------------------------------------------------
+ * 周期时间测试用例
+ * ------------------------------------------------------------------------- */
+
+export testcase CheckMsgEngineData()
+{
+  dword lCheckId;
+
+  lCheckId = ChkStart_MsgAbsCycleTimeViolation(
+               EngineData,
+               kMIN_CYCLE_TIME,
+               kMAX_CYCLE_TIME);
+
+  CheckMsgCyc(lCheckId, kMIN_CYCLE_TIME, kMAX_CYCLE_TIME);
+}
+
+export testcase CheckMsgVehicledata()
+{
+  dword lCheckId;
+
+  lCheckId = ChkStart_MsgAbsCycleTimeViolation(
+               VehicleData,
+               kMIN_CYCLE_TIME,
+               kMAX_CYCLE_TIME);
+
+  CheckMsgCyc(lCheckId, kMIN_CYCLE_TIME, kMAX_CYCLE_TIME);
+}
+
+export testcase CheckMsgGear_Info()
+{
+  dword lCheckId;
+
+  lCheckId = ChkStart_MsgAbsCycleTimeViolation(
+               Gear_Info,
+               kMIN_CYCLE_TIME,
+               kMAX_CYCLE_TIME);
+
+  CheckMsgCyc(lCheckId, kMIN_CYCLE_TIME, kMAX_CYCLE_TIME);
+}
+
+export testcase CheckMsgIgnition_Info()
+{
+  dword lCheckId;
+
+  lCheckId = ChkStart_MsgAbsCycleTimeViolation(
+               Ignition_Info,
+               kMIN_CYCLE_TIME,
+               kMAX_CYCLE_TIME);
+
+  CheckMsgCyc(lCheckId, kMIN_CYCLE_TIME, kMAX_CYCLE_TIME);
+}
+
+export testcase CheckMsgLight_Info()
+{
+  dword lCheckId;
+
+  lCheckId = ChkStart_MsgAbsCycleTimeViolation(
+               Light_Info,
+               kLIGHT_MIN_CYCLE_TIME,
+               kLIGHT_MAX_CYCLE_TIME);
+
+  CheckMsgCyc(lCheckId, kLIGHT_MIN_CYCLE_TIME, kLIGHT_MAX_CYCLE_TIME);
+}
+
+/* -------------------------------------------------------------------------
+ * 检测报文长度的测试用例
+ * ------------------------------------------------------------------------- */
+
+export testcase CheckDLCLock_Info()
+{
+  dword lCheckId;
+
+  lCheckId = ChkStart_InconsistentDLC(Lock_Info);
+  TestAddCondition(lCheckId);
+  testWaitForTimeout(kTIMEOUT);
+  TestRemoveCondition(lCheckId);
+  ChkControl_Destroy(lCheckId);
+}
+
+/* -------------------------------------------------------------------------
+ * 检测未定义信号的测试用例
+ * ------------------------------------------------------------------------- */
+
+export testcase CheckUndefinedMessage()
+{
+  dword lCheckId;
+  long  lEventId;
+  char  lBuffer[100];
+
+  gUndefinedMsgCheckResult = 0;
+
+  lCheckId = ChkStart_UndefinedMessageReceived("UndefinedMsgCallback");
+  testWaitForTimeout(kTIMEOUT);
+
+  if (gUndefinedMsgCheckResult == 1)
+  {
+    lEventId = ChkQuery_EventMessageId(lCheckId);
+    snprintf(lBuffer, elcount(lBuffer),
+             "Undefined message detected: Id 0x%x", lEventId);
+    TestStepFail("", lBuffer);
+  }
+  else
+  {
+    TestStepPass("", "No undefined message detected");
+  }
+
+  ChkControl_Destroy(lCheckId);
+}
+
+UndefinedMsgCallback(dword aCheckId)
+{
+  ChkQuery_EventStatusToWrite(aCheckId);
+  gUndefinedMsgCheckResult = 1;
+}
+
+/* -------------------------------------------------------------------------
+ * 功能测试的测试用例
+ * ------------------------------------------------------------------------- */
+
+export testcase CheckEngine_Speed()
+{
+  dword checkId;  
+  // Information for test report.  
+  @Vehicle_Key::Unlock_Car =1;
+  @Vehicle_Key::Car_Driver=0;
+  @Vehicle_Key::Key_State=2;
+  @Vehicle_Control::Eng_Speed =2000;
+  checkId = ChkStart_MsgSignalValueInvalid(EngineData::EngSpeed, 1900, 2100);
+  testWaitForTimeout(kTIMEOUT);  
+  if(ChkQuery_EventSignalValue(checkId))
+  {
+    TestStepPass("","Correct Engine Speed Value!");  
+  }
+  else
+  {
+    TestStepFail("","Uncorrect Engine Speed Value!");  
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * 执行一次周期时间检查
+ * ------------------------------------------------------------------------- */
+
+CheckMsgCyc(dword aCheckId, float aMinCycleTime, float aMaxCycleTime)
+{
+  long lNumProbes;
+  long lAvgCycleTime;
+  long lMinCycleTime;
+  long lMaxCycleTime;
+  char lBuffer[100];
+
+  // 等待检测积累数据
+  testWaitForTimeout(kTIMEOUT);
+
+  // 停止检测，冻结数据
+  ChkControl_Stop(aCheckId);
+
+  // 查询统计值（double 接收）
+  lAvgCycleTime = ChkQuery_StatProbeIntervalAvg(aCheckId);
+  lMinCycleTime = ChkQuery_StatProbeIntervalMin(aCheckId);
+  lMaxCycleTime = ChkQuery_StatProbeIntervalMax(aCheckId);
+
+  snprintf(lBuffer, elcount(lBuffer),
+           "规范: %.0f~%.0fms | 实测 平均:%.2f 最小:%.2f 最大:%.2f",
+           aMinCycleTime, aMaxCycleTime,
+           lAvgCycleTime, lMinCycleTime, lMaxCycleTime);
+  
+  if (ChkQuery_NumEvents(aCheckId) > 0) {
+    TestStepFail("%s", lBuffer);
+  } else {
+    TestStepPass("%s", lBuffer);
+  }
+
+  // 销毁检测器
+  ChkControl_Destroy(aCheckId);
+}

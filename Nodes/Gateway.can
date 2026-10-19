@@ -1,4 +1,4 @@
-/*@!Encoding:1252*/
+/*@!Encoding:65001*/
 includes
 {
   //To add the head files
@@ -87,6 +87,8 @@ on signal_update KeyState
 on sysvar_update Vehicle_Control::Eng_Speed     
 {
   //Engine speed only available when Key is ON
+  write("[Vehicle_Control::Eng_Speed] 时间=%.3f, 值=%.2f", timeNow(), this);
+  write("[@Vehicle_Key::Key_State] 时间=%.3f, 值=%.2f", timeNow(), @Vehicle_Key::Key_State);
   if(@Vehicle_Key::Key_State==2)
   {
     $EngineData::EngSpeed=@this;

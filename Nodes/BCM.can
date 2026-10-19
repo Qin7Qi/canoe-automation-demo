@@ -1,4 +1,4 @@
-/*@!Encoding:1252*/
+/*@!Encoding:65001*/
 includes
 {
   //To add the head files
@@ -167,4 +167,9 @@ on sysvar Vehicle_Control::Hazards_Enable
       break;
     }
   }
+}
+
+on signal EngineData::EngSpeed
+{
+  write("[EngineData::EngSpeed] 时间=%.3f, 值=%.2f", timeNow(), this);
 }
