@@ -1,4 +1,4 @@
-;CANoe Version |4|12|2|44017 Test Environment 
+;CANoe Version |4|12|2|60389 Test Environment 
 Version: 12.0.101 Build 101
 32 SIMULATION
 5
@@ -12,14 +12,430 @@ VTSPersistentRoot 1 Begin_Of_Object
 1
 TS_PERSISTENT_ROOT_ID_STRING_0x792341fe
 1
+3
+VTSFolder 2 Begin_Of_Object
+1
+VTSItem 3 Begin_Of_Object
+1
+3 3563774183 0
+1
+END_OF_ITEM_DATA
+End_Of_Object VTSItem 3
+4
+Test Environment
 2
+3651335367
+3651330071
+<VFileName V8 QL> 1 "report.xml" 
+END_OF_FILE_NAME
+<VFileName V8 QL> 1 "" 
+END_OF_FILE_NAME
+4
+1
+END_OF_FOLDER_DATA
+End_Of_Object VTSFolder 2
 VTSProgrammedNode 2 Begin_Of_Object
 1
 VTSWrapper<class_VProgrammedNode> 3 Begin_Of_Object
 2
 VTSItem 4 Begin_Of_Object
 1
-3 3000036316 0
+3 3651330071 0
+1
+END_OF_ITEM_DATA
+End_Of_Object VTSItem 4
+2
+VXmlTestNode 4 Begin_Of_Object
+4
+VTestNode 5 Begin_Of_Object
+9
+VProgrammedNode 6 Begin_Of_Object
+7
+VConfigurationRoot 7 Begin_Of_Object
+1
+End_Of_Object VConfigurationRoot 7
+<VFileName V8 QL> 1 "Diagnosis\Test\DiagnosisTest.vxt" 
+1
+C:\Users\29394\Desktop\CANoeDemo\CANoeDemo\Vehicle_System_Simulation\Diagnosis\Test\DiagnosisTest.vxt
+
+
+5
+Test 5
+Test 5
+EOF_TITLE_INFO
+
+1
+1
+VConfigurationBox 7 Begin_Of_Object
+1
+VUniqueBox 8 Begin_Of_Object
+1
+VBoxRoot 9 Begin_Of_Object
+1
+3
+1 7 0 1 -1 -1 -1 -1 1616 598 2560 1200
+
+1
+
+MDI_DOCK_INFO_END
+5
+1
+6
+0 1 -1 -1 -1 -1 1616 598 2560 1200
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+1
+7
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+1
+2560 1200
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+6
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+6
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+-1
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+END_OF_DESKTOP_DATA_COLLECTION
+0
+0 1
+1
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+-1
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+-1
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+-1
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+-1
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+END_OF_DESKTOP_DATA_COLLECTION
+0
+END_OF_DESKTOP_MEMBER
+{7FE35C0D-D87E-44E1-BF54-6593F6509C4F}
+0
+End_Of_Object VBoxRoot 9
+1 -1 0 0 0 0 0 0 0 0 0 0
+End_Of_Object VUniqueBox 8
+1
+End_Of_Object VConfigurationBox 7
+1
+1
+0
+1
+0
+
+EOF_MBSSDATA
+1
+0 1
+0
+EOF_NLDATA
+0
+EOF_ASSEMBLYDATA
+<VFileName V8 QL> 1 "Diagnosis\Test\DiagnosisTest.vxt" 
+VIPBStackSetting 7 Begin_Of_Object
+6
+2
+0
+0
+1
+0
+1
+7
+0.0.0.0
+End_Of_Serialized_Data 7
+7
+::
+End_Of_Serialized_Data 7
+6
+End_Of_Object VIPBStackSetting 7
+6
+NULL
+End_Of_Serialized_Data 6
+0
+<VFileName V8 QL> 0 "" 
+0
+0
+End_Of_Object VProgrammedNode 6
+0
+2
+IDS_REPORTFILTER_ITEM_DESCRIPTION=1
+IDS_REPORTFILTER_ITEM_COMMENTS=1
+IDS_REPORTFILTER_ITEM_VARIABLE=1
+IDS_REPORTFILTER_ITEM_RESUME_SIMPLETIMEOUT=1
+IDS_REPORTFILTER_ITEM_RESUME=1
+IDS_REPORTFILTER_ITEM_FIRSTVIOLATION=1
+IDS_REPORTFILTER_ITEM_STATISTICS=1
+IDS_REPORTFILTER_ITEM_HARDWARE=1
+IDS_REPORTFILTER_ITEM_CHECKEVENTS=0
+IDS_REPORTFITLER_ITEM_GENINFO=1
+IDS_REPORTFITLER_ITEM_SUTINFO=1
+IDS_REPORTFITLER_ITEM_ENGINFO=1
+IDS_REPORTFITLER_ITEM_ELMINFO=1
+End_Of_ReportFilter_Items
+0 
+NULL
+NULL
+1
+<VFileName V8 QL> 1 "Diagnosis\Test\DiagnosisTest.can" 
+EOF_CAPLLIBS
+<VFileName V8 QL> 1 "Diagnosis\Test\DiagnosisTest_report.xml" 
+1 0 1
+1
+<VFileName V8 BQL> 1 base=cfg "" 
+3
+VSimulinkModelViewerConfiguration 6 Begin_Of_Object
+2
+<VFileName V8 QL> 0 "" 
+<VFileName V8 QL> 0 "" 
+<VFileName V8 QL> 0 "" 
+150
+0
+End_Of_Object VSimulinkModelViewerConfiguration 6
+1
+0
+1
+1
+VConfigurationBox 6 Begin_Of_Object
+1
+VUniqueBox 7 Begin_Of_Object
+1
+VBoxRoot 8 Begin_Of_Object
+1
+3
+1 7 0 1 -1 -1 -1 -1 1616 598 2560 1200
+
+1
+
+MDI_DOCK_INFO_END
+5
+1
+6
+0 1 -1 -1 -1 -1 1616 598 2560 1200
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+1
+7
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+1
+2560 1200
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+6
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+6
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+-1
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+END_OF_DESKTOP_DATA_COLLECTION
+0
+0 1
+1
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+-1
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+-1
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+-1
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+0
+-1
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+0
+0 0
+END_OF_DESKTOP_DATA
+END_OF_DESKTOP_DATA_COLLECTION
+0
+END_OF_DESKTOP_MEMBER
+{7FE35C0D-D87E-44E1-BF54-6593F6509C4F}
+0
+End_Of_Object VBoxRoot 8
+1 -1 0 0 0 0 0 0 0 0 0 0
+End_Of_Object VUniqueBox 7
+1
+End_Of_Object VConfigurationBox 6
+<VFileName V8 QL> 1 "Diagnosis\Test\DiagnosisTest.cbf" 
+NULL
+0
+0
+<VFileName V8 QL> 1 "rpt78EE.xml" 
+End_Of_Object VTestNode 5
+VTestModuleControllerXML 5 Begin_Of_Object
+1
+VTestModuleController 6 Begin_Of_Object
+3
+1
+0
+0
+0
+0
+0
+1
+0
+0
+0
+0
+0
+End_Of_Object VTestModuleController 6
+End_Of_Object VTestModuleControllerXML 5
+End_Of_Testcase_Exec_Flags
+Variant: All VariantEnd
+<VFileName V8 BQL> 1 base=cfg "" 
+End_Of_Testcase_Exec_Flags_W
+Variant: All VariantEnd
+End_Of_Object VXmlTestNode 4
+TS_WRP_DATA_END
+End_Of_Object VTSWrapper<class_VProgrammedNode> 3
+4
+0
+1
+TS_BUS_INFO_COLLECTION_END
+TS_CAPL_BLOCK_END
+End_Of_Object VTSProgrammedNode 2
+VTSProgrammedNode 2 Begin_Of_Object
+1
+VTSWrapper<class_VProgrammedNode> 3 Begin_Of_Object
+2
+VTSItem 4 Begin_Of_Object
+1
+3 3651335367 0
 1
 END_OF_ITEM_DATA
 End_Of_Object VTSItem 4
@@ -52,19 +468,31 @@ VUniqueBox 8 Begin_Of_Object
 VBoxRoot 9 Begin_Of_Object
 1
 3
-1 -1 0 1 0 0 0 0 512 240 2048 960
-Tester
+1 4 0 1 -1 -1 -1 -1 1616 172 2560 597
+
 1
 
 MDI_DOCK_INFO_END
 5
 1
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 -1 -1 -1 -1 1616 172 2560 597
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+1
+4
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+1
+2560 1200
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
--1
+4
 1
 0 1 -1 -1 -1 -1 640 348 1920 1044
 0
@@ -72,11 +500,11 @@ END_OF_DOCK_INFO
 0 0
 END_OF_DESKTOP_DATA
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
--1
+4
 1
 0 1 -1 -1 -1 -1 640 348 1920 1044
 0
@@ -84,19 +512,7 @@ END_OF_DOCK_INFO
 0 0
 END_OF_DESKTOP_DATA
 6
-0 1 0 0 0 0 240 280 590 530
-6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
-END_OF_DOCK_INFO
-0
--1
-1
-0 1 -1 -1 -1 -1 640 348 1920 1044
-0
-0
-0 0
-END_OF_DESKTOP_DATA
-6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
@@ -112,7 +528,7 @@ END_OF_DESKTOP_DATA_COLLECTION
 0 1
 1
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
@@ -124,7 +540,7 @@ END_OF_DOCK_INFO
 0 0
 END_OF_DESKTOP_DATA
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
@@ -136,7 +552,7 @@ END_OF_DOCK_INFO
 0 0
 END_OF_DESKTOP_DATA
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
@@ -148,7 +564,7 @@ END_OF_DOCK_INFO
 0 0
 END_OF_DESKTOP_DATA
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
@@ -162,7 +578,7 @@ END_OF_DESKTOP_DATA
 END_OF_DESKTOP_DATA_COLLECTION
 0
 END_OF_DESKTOP_MEMBER
-{FEC2B66D-56D6-4D87-9CA7-25B07046EC28}
+{40A20B4F-EE43-42D2-92D7-5A184E8A0EB2}
 0
 End_Of_Object VBoxRoot 9
 1 -1 0 0 0 0 0 0 0 0 0 0
@@ -253,19 +669,31 @@ VUniqueBox 7 Begin_Of_Object
 VBoxRoot 8 Begin_Of_Object
 1
 3
-1 -1 0 1 0 0 0 0 512 240 2048 960
-Tester
+1 4 0 1 -1 -1 -1 -1 1616 172 2560 597
+
 1
 
 MDI_DOCK_INFO_END
 5
 1
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 -1 -1 -1 -1 1616 172 2560 597
+6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
+END_OF_DOCK_INFO
+1
+4
+1
+0 1 -1 -1 -1 -1 640 348 1920 1044
+0
+1
+2560 1200
+END_OF_DESKTOP_DATA
+6
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
--1
+4
 1
 0 1 -1 -1 -1 -1 640 348 1920 1044
 0
@@ -273,11 +701,11 @@ END_OF_DOCK_INFO
 0 0
 END_OF_DESKTOP_DATA
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
--1
+4
 1
 0 1 -1 -1 -1 -1 640 348 1920 1044
 0
@@ -285,19 +713,7 @@ END_OF_DOCK_INFO
 0 0
 END_OF_DESKTOP_DATA
 6
-0 1 0 0 0 0 240 280 590 530
-6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
-END_OF_DOCK_INFO
-0
--1
-1
-0 1 -1 -1 -1 -1 640 348 1920 1044
-0
-0
-0 0
-END_OF_DESKTOP_DATA
-6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
@@ -313,7 +729,7 @@ END_OF_DESKTOP_DATA_COLLECTION
 0 1
 1
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
@@ -325,7 +741,7 @@ END_OF_DOCK_INFO
 0 0
 END_OF_DESKTOP_DATA
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
@@ -337,7 +753,7 @@ END_OF_DOCK_INFO
 0 0
 END_OF_DESKTOP_DATA
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
@@ -349,7 +765,7 @@ END_OF_DOCK_INFO
 0 0
 END_OF_DESKTOP_DATA
 6
-0 1 0 0 0 0 240 280 590 530
+0 1 0 0 -1 -1 240 280 590 530
 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 -1 32767 0 0 0 0 0 0 0 0 0 0 -1 -1 0 0 0 0 0 0 
 END_OF_DOCK_INFO
 0
@@ -363,7 +779,7 @@ END_OF_DESKTOP_DATA
 END_OF_DESKTOP_DATA_COLLECTION
 0
 END_OF_DESKTOP_MEMBER
-{FEC2B66D-56D6-4D87-9CA7-25B07046EC28}
+{40A20B4F-EE43-42D2-92D7-5A184E8A0EB2}
 0
 End_Of_Object VBoxRoot 8
 1 -1 0 0 0 0 0 0 0 0 0 0
@@ -374,7 +790,7 @@ End_Of_Object VConfigurationBox 6
 NULL
 0
 0
-<VFileName V8 QL> 0 "" 
+<VFileName V8 QL> 1 "rptD7EE.xml" 
 End_Of_Object VTestNode 5
 VTestModuleControllerXML 5 Begin_Of_Object
 1
@@ -395,10 +811,10 @@ VTestModuleController 6 Begin_Of_Object
 End_Of_Object VTestModuleController 6
 End_Of_Object VTestModuleControllerXML 5
 End_Of_Testcase_Exec_Flags
-Variant:
+Variant: All VariantEnd
 <VFileName V8 BQL> 1 base=cfg "" 
 End_Of_Testcase_Exec_Flags_W
-Variant:
+Variant: All VariantEnd
 End_Of_Object VXmlTestNode 4
 TS_WRP_DATA_END
 End_Of_Object VTSWrapper<class_VProgrammedNode> 3
@@ -408,34 +824,18 @@ End_Of_Object VTSWrapper<class_VProgrammedNode> 3
 TS_BUS_INFO_COLLECTION_END
 TS_CAPL_BLOCK_END
 End_Of_Object VTSProgrammedNode 2
-VTSFolder 2 Begin_Of_Object
 1
-VTSItem 3 Begin_Of_Object
-1
-3 3763028588 0
-1
-END_OF_ITEM_DATA
-End_Of_Object VTSItem 3
-4
-Test Environment
-1
-3000036316
-<VFileName V8 QL> 1 "report.xml" 
-END_OF_FILE_NAME
-<VFileName V8 QL> 1 "" 
-END_OF_FILE_NAME
+3563774183
 3
 1
-END_OF_FOLDER_DATA
-End_Of_Object VTSFolder 2
-1
-3763028588
+3563774183
 2
+3651335367
+3651330071
 1
-3000036316
+3651330071
 0
 1
-3763028588
-1
-3000036316
+3651335367
+0
 End_Of_Object VTSPersistentRoot 1

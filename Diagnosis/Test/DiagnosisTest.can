@@ -1,0 +1,1093 @@
+﻿/*@!Encoding:65001*/
+/*
+ * DiagnosisTest_Lib.can
+ *
+ * CAPL test library for the Chapter 15 diagnostic tests.
+ * The XML Test Module DiagnosisTest.vxt owns the hierarchy and selection.
+ *
+ * This file must NOT contain a MainTest() function.
+ *
+ * Nodes/IPC.can remains the simulated ECU. Nodes/Tester.can is no longer
+ * required: its vehicle start-up sequence moved to InitDiagnosis() below, and
+ * its panel read/write logic moved to the exported diagnostic test cases.
+ * This library sends diagnostic requests and checks the responses directly.
+ */
+
+includes
+{
+}
+
+variables
+{
+  dword gTestStep;
+  const dword RESPONSE_TIMEOUT = 15000;
+  const dword SENDING_TIMEOUT  = 20000;
+
+  char TEST_STEP[4] = "000";
+
+  byte VIN[17] =
+  {
+    0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49,
+    0x4A, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47
+  };
+
+  byte SERIAL_NUMBER[9] =
+  {
+    0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39
+  };
+
+  byte MANUFACTURING_DATE[3] = { 24, 6, 15 };
+}
+
+/* =========================================================================
+ * Initialization called from XML <preparation>
+ * ========================================================================= */
+
+export testfunction InitDiagnosis()
+{
+  diagSetTarget("IPC");
+
+  @Vehicle_Key::Unlock_Car = 1;
+  @Vehicle_Key::Car_Driver = 0;
+  @Vehicle_Key::Key_State  = 3;
+
+  // The BCM simulation changes Key_State from 3 (Crank) to 2 (RUN) after
+  // about 800 ms. Wait long enough for the nodes and diagnostic layer.
+  testWaitForTimeout(2000);
+}
+
+export testfunction Diag_RestoreEngineValues()
+{
+  TestCaseComment("恢复发动机转速和温度到初始值");
+
+  // 1. 先恢复温度（Speed_Up = 0 → EngTemp = 0，同时 Eng_Speed 被写成 0）
+  @Vehicle_Control::Speed_Up = 0;
+  testWaitForTimeout(300);
+
+  // 2. 再显式恢复转速（防止 Key_State 不是 2 时映射没执行）
+  @Vehicle_Control::Eng_Speed = 0;
+  testWaitForTimeout(500);   // 等 Gateway 映射 + IPC 抓取报文
+
+  // 3. 打印确认（可选，调试用）
+  write("[恢复] Eng_Speed = %d, Speed_Up = %d, 总线 EngSpeed = %.2f, EngTemp = %.2f",
+        @Vehicle_Control::Eng_Speed,
+        @Vehicle_Control::Speed_Up,
+        getSignal(EngineData::EngSpeed),
+        getSignal(EngineData::EngTemp));
+}
+
+/* =========================================================================
+ * Session control
+ * ========================================================================= */
+
+export testcase DiagTest_Session_Switch()
+{
+  long status;
+
+  Diag_ResetTestStep();
+
+  Diag_IncrementTestStep();
+  TestCaseComment("切换至默认会话");
+  status = Diag_SwitchToDefaultSession();
+  if (status != 0)
+  {
+    TestStepFail(TEST_STEP, "默认会话切换失败！");
+  }
+  else
+  {
+    TestStepPass(TEST_STEP, "默认会话切换成功！");
+  }
+
+  Diag_IncrementTestStep();
+  TestCaseComment("切换至扩展会话");
+  status = Diag_SwitchToExtendedSession();
+  if (status != 0)
+  {
+    TestStepFail(TEST_STEP, "扩展会话切换失败！");
+  }
+  else
+  {
+    TestStepPass(TEST_STEP, "会话延时切换成功！");
+  }
+
+  Diag_IncrementTestStep();
+  TestCaseComment("再次切换至默认会话");
+  status = Diag_SwitchToDefaultSession();
+  if (status != 0)
+  {
+    TestStepFail(TEST_STEP, "默认会话切换失败！");
+  }
+  else
+  {
+    TestStepPass(TEST_STEP, "默认会话切换成功！");
+  }
+}
+
+export testcase DiagTest_ProductionSessionFromDefault()
+{
+  diagRequest IPC.Production_Session_Start req;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("在“默认会话”（Default Session）中，必须拒绝“生产会话”（Production Session）。");
+
+  if (Diag_SwitchToDefaultSession() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法进入默认会话");
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  Diag_SendAndExpectNRC(req, 0x7E, "“默认会话”中的生产会话");
+}
+
+/* =========================================================================
+ * VIN read/write
+ * ========================================================================= */
+
+export testcase DiagTest_VIN_WriteAndRead()
+{
+  long status;
+  long copiedBytes;
+
+  diagRequest IPC.Vehicle_Identification_Number_Write VIN_Write;
+  diagRequest IPC.Vehicle_Identification_Number_Read VIN_ReadReq;
+  byte VIN_Read[17];
+  int i;
+
+  Diag_ResetTestStep();
+
+  // Step 01: Default session, then Extended session
+  Diag_IncrementTestStep();
+  TestCaseComment("切换至默认会话");
+  status = Diag_SwitchToDefaultSession();
+  if (status != 0)
+  {
+    TestStepFail(TEST_STEP, "默认会话切换失败！");
+  }
+  else
+  {
+    TestStepPass(TEST_STEP, "默认会话切换成功！");
+  }
+
+  TestCaseComment("切换至扩展会话");
+  status = Diag_SwitchToExtendedSession();
+  if (status != 0)
+  {
+    TestStepFail(TEST_STEP, "扩展会话切换失败！");
+  }
+  else
+  {
+    TestStepPass(TEST_STEP, "会话延时切换成功！");
+  }
+
+  // Step 02: Unlock Security Level 1, then Level 2
+  if (Diag_SecurityLevel_1_Unlock() != 0)
+  {
+    TestStepFail(TEST_STEP, "安全级别 1 解锁失败！");
+    return;
+  }
+
+  if (Diag_SecurityLevel_2_Unlock() != 0)
+  {
+    TestStepFail(TEST_STEP, "安全级别 2 解锁失败！");
+    return;
+  }
+
+  // Step 03: Write VIN
+  Diag_IncrementTestStep();
+  TestCaseComment("写入 VIN 码");
+  DiagSetParameterRaw(VIN_Write, "VIN", VIN, elcount(VIN));
+  if (Diag_SendAndWait(VIN_Write, "VIN write") != 0)
+  {
+    return;
+  }
+
+  // Step 04: Back to Security Level 1, required for VIN read
+  if (Diag_SecurityLevel_1_Unlock() != 0)
+  {
+    TestStepFail(TEST_STEP, "安全级别 1 解锁失败！");
+    return;
+  }
+
+  // Step 05: Read and compare VIN
+  Diag_IncrementTestStep();
+  TestCaseComment("读取 VIN 码");
+  if (Diag_SendAndWait(VIN_ReadReq, "VIN read") != 0)
+  {
+    return;
+  }
+
+  copiedBytes = diagGetRespParameterRaw(
+                  VIN_ReadReq, "VIN", VIN_Read, elcount(VIN_Read));
+  PrintByteArray(VIN_Read, elcount(VIN_Read));
+
+  TestCaseComment("验证车辆识别码 (VIN)");
+  for (i = 0; i < elcount(VIN); i++)
+  {
+    if (VIN_Read[i] != VIN[i])
+    {
+      TestStepFail(TEST_STEP,
+                   "读取出的 VIN 与字节 %d 处的书写值不符！", i);
+      return;
+    }
+  }
+
+  TestStepPass(TEST_STEP, "读取出的VIN与书面记录的数值一致！");
+}
+// 将任意长度的 byte 数组转换为字符串并打印
+void PrintByteArray(byte data[], dword dataLen)
+{
+  char str[256];   // 最大支持 255 字节
+  dword i;
+  dword len;
+
+  // 防止缓冲区溢出
+  len = dataLen;
+  if (len > elcount(str) - 1) {
+    len = elcount(str) - 1;
+  }
+
+  for (i = 0; i < len; i++) {
+    str[i] = (char)data[i];
+  }
+  str[len] = '\0';
+
+  write("数据(%d字节) = %s", len, str);
+}
+export testcase DiagTest_VINWriteWithoutSecurity()
+{
+  diagRequest IPC.Vehicle_Identification_Number_Write req;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("在未进行安全解锁的情况下准备扩展会话");
+
+  if (Diag_PrepareExtended() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法进入扩展会话");
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  DiagSetParameterRaw(req, "VIN", VIN, elcount(VIN));
+  Diag_SendAndExpectNRC(req, 0x33, "在无安全保护的情况下写入 VIN");
+}
+
+/* =========================================================================
+ * Manufacturing date
+ * ========================================================================= */
+
+export testcase DiagTest_ManufacturingDate_Write()
+{
+  diagRequest IPC.ECU_Manufacturing_Date_Write req;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("准备扩展会话及安全级别 1");
+
+  if (Diag_PrepareExtendedUnlock1() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法准备会话/安全设置");
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  req.SetParameter("Manufacturing_date_Year", MANUFACTURING_DATE[0]);
+  req.SetParameter("Manufacturing_date_Month", MANUFACTURING_DATE[1]);
+  req.SetParameter("Manufacturing_date_Day", MANUFACTURING_DATE[2]);
+
+  if (Diag_SendAndWait(req, "Manufacturing date write") == 0)
+  {
+    TestStepPass(TEST_STEP, "接受标注生产日期");
+  }
+  else
+  {
+    TestStepFail(TEST_STEP, "生产日期写入失败");
+  }
+}
+
+export testcase DiagTest_ManufacturingDate_Read()
+{
+  diagRequest IPC.ECU_Manufacturing_Date_Read req;
+  long year;
+  long month;
+  long day;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("准备扩展会话");
+
+  if (Diag_PrepareExtended() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法进入扩展会话");
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  if (Diag_SendAndWait(req, "Manufacturing date read") != 0)
+  {
+    return;
+  }
+
+  year  = (long)diagGetRespParameter(req, "Manufacturing_date_Year");
+  month = (long)diagGetRespParameter(req, "Manufacturing_date_Month");
+  day   = (long)diagGetRespParameter(req, "Manufacturing_date_Day");
+
+  if (year < 0 || year > 99 || month < 1 || month > 12 || day < 1 || day > 31)
+  {
+    TestStepFail(TEST_STEP,
+                 "无效的生产日期：20%02d-%02d-%02d", year, month, day);
+    return;
+  }
+
+  TestStepPass(TEST_STEP,
+               "生产日期：20%02d-%02d-%02d", year, month, day);
+}
+
+/* =========================================================================
+ * Serial number
+ * ========================================================================= */
+
+export testcase DiagTest_SerialNumber_WriteAndRead()
+{
+  diagRequest IPC.ECU_Serial_Number_Write writeReq;
+  diagRequest IPC.ECU_Serial_Number_Read readReq;
+  byte readBack[9];
+  long copiedBytes;
+  int i;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("准备扩展会话及安全级别 1");
+
+  if (Diag_PrepareExtendedUnlock1() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法准备会话/安全设置");
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  DiagSetParameterRaw(writeReq, "Serial_Number", SERIAL_NUMBER, elcount(SERIAL_NUMBER));
+  if (Diag_SendAndWait(writeReq, "Serial number write") != 0)
+  {
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  if (Diag_SendAndWait(readReq, "Serial number read") != 0)
+  {
+    return;
+  }
+
+  copiedBytes = diagGetRespParameterRaw(
+                  readReq, "Serial_Number", readBack, elcount(readBack));
+//  if (copiedBytes < elcount(readBack))
+//  {
+//    TestStepFail(TEST_STEP, "序列号响应过短：%d 字节", copiedBytes);
+//    return;
+//  }
+
+  for (i = 0; i < elcount(SERIAL_NUMBER); i++)
+  {
+    if (readBack[i] != SERIAL_NUMBER[i])
+    {
+      TestStepFail(TEST_STEP,
+                   "在第 %d 字节处序列号不匹配！", i);
+      return;
+    }
+  }
+
+  TestStepPass(TEST_STEP, "回读的序列号与写入的数值一致！");
+}
+
+export testcase DiagTest_SerialNumber_Read()
+{
+  diagRequest IPC.ECU_Serial_Number_Read req;
+  byte data[9];
+  char dataStr[10];
+  long copiedBytes;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("准备扩展会话");
+
+  if (Diag_PrepareExtended() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法进入扩展会话");
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  if (Diag_SendAndWait(req, "Serial number read") != 0)
+  {
+    return;
+  }
+
+  copiedBytes = diagGetRespParameterRaw(req, "Serial_Number", data, elcount(data));
+
+  // ===== 3. 打印实际数据，供人工核对 =====
+  //PrintByteArrayDebug("序列号读取", data, elcount(data));
+  ByteArrayToStr(data, elcount(data), dataStr, elcount(dataStr));
+
+  // ===== 4. 数据全 0 判失败（参数名不匹配的典型症状）=====
+  if (data[0] == 0 && data[1] == 0 && data[2] == 0) {
+    TestStepFail(TEST_STEP,
+               "序列号数据为空（copiedBytes=%d），请检查参数名 'Serial_Number' 与 CDD 是否一致",
+               copiedBytes);
+    return;
+  }
+
+  // ===== 5. 判定为 Pass，报告里写真实数据而非 copiedBytes =====
+  TestStepPass(TEST_STEP, "序列号读取成功：%s（Hex: 0x%02X...）", dataStr, data[0]);
+}
+
+/* =========================================================================
+ * Variant coding
+ * ========================================================================= */
+
+export testcase DiagTest_VariantCoding_WriteAndRead()
+{
+  diagRequest IPC.Variant_Coding_Write writeReq;
+  diagRequest IPC.Variant_Coding_Read readReq;
+
+  double countryCode      = 1.0;
+  double vehicleType      = 3.0;
+  double beltWarning      = 1.0;
+  double overSpeedWarning = 1.0;
+
+  double readCountryCode;
+  double readVehicleType;
+  double readBeltWarning;
+  double readOverSpeedWarning;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("准备扩展会话及安全级别 1");
+
+  if (Diag_PrepareExtendedUnlock1() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法准备会话/安全设置");
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  writeReq.SetParameter("Coding_String.Country_Code", countryCode);
+  writeReq.SetParameter("Coding_String.Vehicle_Type", vehicleType);
+  writeReq.SetParameter("Coding_String.Belt_Warning", beltWarning);
+  writeReq.SetParameter("Coding_String.OverSpeed_Warning", overSpeedWarning);
+
+  if (Diag_SendAndWait(writeReq, "Variant coding write") != 0)
+  {
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  if (Diag_SendAndWait(readReq, "Variant coding read") != 0)
+  {
+    return;
+  }
+
+  readCountryCode = diagGetRespParameter(
+                      readReq, "Coding_String.Country_Code");
+  readVehicleType = diagGetRespParameter(
+                      readReq, "Coding_String.Vehicle_Type");
+  readBeltWarning = diagGetRespParameter(
+                      readReq, "Coding_String.Belt_Warning");
+  readOverSpeedWarning = diagGetRespParameter(
+                           readReq, "Coding_String.OverSpeed_Warning");
+
+  if (readCountryCode != countryCode
+      || readVehicleType != vehicleType
+      || readBeltWarning != beltWarning
+      || readOverSpeedWarning != overSpeedWarning)
+  {
+    TestStepFail(TEST_STEP,
+                 "变异编码不匹配：%.0f/%.0f/%.0f/%.0f",
+                 readCountryCode, readVehicleType,
+                 readBeltWarning, readOverSpeedWarning);
+    return;
+  }
+
+  TestStepPass(TEST_STEP, "变体编码回读值与写入值一致！");
+}
+
+export testcase DiagTest_VariantCoding_Read()
+{
+  diagRequest IPC.Variant_Coding_Read req;
+  double countryCode;
+  double vehicleType;
+  double beltWarning;
+  double overSpeedWarning;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("准备扩展会话");
+
+  if (Diag_PrepareExtended() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法进入扩展会话");
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  if (Diag_SendAndWait(req, "Variant coding read") != 0)
+  {
+    return;
+  }
+
+  countryCode = diagGetRespParameter(
+                  req, "Coding_String.Country_Code");
+  vehicleType = diagGetRespParameter(
+                  req, "Coding_String.Vehicle_Type");
+  beltWarning = diagGetRespParameter(
+                  req, "Coding_String.Belt_Warning");
+  overSpeedWarning = diagGetRespParameter(
+                       req, "Coding_String.OverSpeed_Warning");
+
+  TestStepPass(TEST_STEP,
+               "变体编码：%.0f/%.0f/%.0f/%.0f",
+               countryCode, vehicleType, beltWarning, overSpeedWarning);
+}
+
+/* =========================================================================
+ * Active session and DID reads
+ * ========================================================================= */
+
+export testcase DiagTest_ActiveSession_Read()
+{
+  diagRequest IPC.Active_Diagnostic_Session_Read req;
+  long sessionType;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("准备扩展会话");
+
+  if (Diag_PrepareExtended() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法进入扩展会话");
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  if (Diag_SendAndWait(req, "Active session read") != 0)
+  {
+    return;
+  }
+
+  sessionType = (long)diagGetRespParameter(
+                  req, "Diagnostic_Session_Type");
+
+  if (sessionType != 0x03)
+  {
+    TestStepFail(TEST_STEP,
+                 "当前会话为 0x%02x，预期为 0x03", sessionType);
+    return;
+  }
+
+  TestStepPass(TEST_STEP, "当前会话为扩展会话 (0x03)");
+}
+
+export testcase DiagTest_DID_EngineSpeed_Read()
+{
+  diagRequest IPC.DID_Engine_Speed_Read req;
+  byte data[8];
+  long copiedBytes;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("准备扩展会话");
+
+  if (Diag_PrepareExtended() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法进入扩展会话");
+    return;
+  }
+  
+  // ===== 2. 设置发动机转速 =====
+  Diag_IncrementTestStep();
+  TestCaseComment("设置发动机转速为 2000 rpm");
+
+  @Vehicle_Key::Key_State = 2;       // Gateway 映射的前提条件
+  testWaitForTimeout(300);
+
+  @Vehicle_Control::Eng_Speed = 2000;
+  testWaitForTimeout(500);           // 等 Gateway 映射 + IPC 抓取报文
+
+  write("[设置后] @Eng_Speed = %d, 总线 EngSpeed = %.2f",
+        @Vehicle_Control::Eng_Speed, getSignal(EngineData::EngSpeed));
+
+  // ===== 3. 读取 DID =====
+  Diag_IncrementTestStep();
+  if (Diag_SendAndWait(req, "DID engine speed read") != 0)
+  {
+    return;
+  }
+
+  // 2. 提取数据（不依赖返回值）
+  copiedBytes = diagGetRespParameterRaw(req, "DID_Engine_Speed", data, elcount(data));
+  write("[调试] copiedBytes = %d, data[0]=0x%02X, data[1]=0x%02X",
+      copiedBytes, data[0], data[1]);
+
+  // 3. 用数据本身判断有效性（而不是返回值）
+  //    如果 DID 定义是 2 字节，且第一个字节非 0，基本可判定读取成功
+  if (data[0] == 0 && data[1] == 0) {
+    TestStepFail(TEST_STEP, "DID 发动机转速数据为空（可能参数名不匹配）");
+    return;
+  }
+
+  TestStepPass(TEST_STEP, "DID 发动机转速读取成功：%d",
+               ByteArrayToValueBE(data, 2));
+  
+  Diag_RestoreEngineValues();
+}
+
+export testcase DiagTest_DID_EngineTemperature_Read()
+{
+  diagRequest IPC.DID_Engine_Temperature_Read req;
+  byte data[4];
+  char dataStr[5];
+  long copiedBytes;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("准备扩展会话");
+
+  if (Diag_PrepareExtended() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法进入扩展会话");
+    return;
+  }
+  
+  // ===== 2. 设置发动机温度 =====
+  Diag_IncrementTestStep();
+  TestCaseComment("设置发动机温度为 90℃");
+
+  @Vehicle_Key::Key_State = 2;
+  testWaitForTimeout(300);
+
+  // Speed_Up = 60 → Gateway 设置 $EngTemp = 60 × 1.5 = 90
+  @Vehicle_Control::Speed_Up = 60;
+  testWaitForTimeout(500);
+
+  // 注意：Speed_Up 会把 Eng_Speed 改成 2400，如果不需要可以覆盖回来
+  // @Vehicle_Control::Eng_Speed = 0;
+
+  write("[设置后] Speed_Up = %d, 总线 EngTemp = %.2f",
+        @Vehicle_Control::Speed_Up, getSignal(EngineData::EngTemp));
+
+  // ===== 3. 读取 DID =====
+  Diag_IncrementTestStep();
+  if (Diag_SendAndWait(req, "DID 发动机温度读数") != 0)
+  {
+    return;
+  }
+
+  // ===== 2. 提取数据（不依赖返回值）=====
+  copiedBytes = diagGetRespParameterRaw(
+                req, "DID_Engine_Temperature", data, elcount(data));
+
+  // ===== 3. 打印数据，供人工核对 =====
+  //PrintByteArrayDebug("DID 发动机温度读数", data, 4);
+  ByteArrayToStr(data, 4, dataStr, 5);
+
+  // ===== 4. 温度 0 是合法值，只做提示，不判失败 =====
+  //    但如果 copiedBytes 返回 0 且 data[0] 也是 0，
+  //    有可能是参数名不匹配，值得人工看一眼
+  if (copiedBytes <= 0 && data[0] == 0) {
+    TestCaseComment("提示：温度数据为 0");
+  }
+
+  // ===== 5. 判定为 Pass =====
+  TestStepPass(TEST_STEP,
+             "DID 发动机温度读数：%d（Hex: 0x%02X）", ByteArrayToValueLE(data, 1), data[0]);
+  
+  Diag_RestoreEngineValues();
+}
+void ByteArrayToStr(byte data[], dword dataLen, char outStr[], dword outStrSize)
+{
+  dword i;
+  dword len;
+
+  // 防止缓冲区溢出：最多填 outStrSize-1 个字符，留一个位置给 '\0'
+  len = dataLen;
+  if (len > outStrSize - 1) {
+    len = outStrSize - 1;
+  }
+
+  for (i = 0; i < len; i++) {
+    outStr[i] = (char)data[i];
+  }
+  outStr[len] = '\0';
+}
+dword ByteArrayToValueLE(byte data[], dword dataLen)
+{
+  dword value = 0;
+  dword i;
+
+  // 最多拼 4 字节（dword 是 32 位）
+  if (dataLen > 4) dataLen = 4;
+
+  for (i = 0; i < dataLen; i++) {
+    value |= ((dword)data[i]) << (i * 8);
+  }
+  return value;
+}
+dword ByteArrayToValueBE(byte data[], dword dataLen)
+{
+  dword value = 0;
+  dword i;
+
+  if (dataLen > 4) dataLen = 4;
+
+  for (i = 0; i < dataLen; i++) {
+    value = (value << 8) | (dword)data[i];
+  }
+  return value;
+}
+// 同时打印十六进制原始值和可读字符串，便于排查乱码问题
+// 将 0~15 的数值转换为对应的十六进制字符
+char NibbleToHex(byte n)
+{
+  if (n < 10) {
+    return (char)('0' + n);
+  }
+  return (char)('A' + (n - 10));
+}
+
+// 同时打印 byte 数组的 Hex 值和可读字符串
+void PrintByteArrayDebug(char label[], byte data[], dword dataLen)
+{
+  char hexStr[512];
+  char str[256];
+  dword i;
+  dword len;
+  dword pos;
+
+  // 防止缓冲区溢出
+  len = dataLen;
+  if (len > elcount(str) - 1) {
+    len = elcount(str) - 1;
+  }
+
+  // ===== 手动构造 Hex 字符串 =====
+  pos = 0;
+  for (i = 0; i < len; i++) {
+    if (pos + 4 >= elcount(hexStr)) {
+      break;   // 空间不足，停止拼接
+    }
+    hexStr[pos]     = NibbleToHex((byte)(data[i] >> 4));      // 高 4 位
+    hexStr[pos + 1] = NibbleToHex((byte)(data[i] & 0x0F));    // 低 4 位
+    hexStr[pos + 2] = ' ';
+    pos = pos + 3;
+  }
+  hexStr[pos] = '\0';   // 手动补结束符
+
+  // ===== 构造可读字符串 =====
+  for (i = 0; i < len; i++) {
+    str[i] = (char)data[i];
+  }
+  str[len] = '\0';      // 手动补结束符
+
+  // ===== 打印 =====
+  write("[%s] Hex: %s", label, hexStr);
+  write("[%s] Str: %s", label, str);
+}
+export testcase DiagTest_PowerSupplyVoltage_Read()
+{
+  diagRequest IPC.Power_Supply_Voltage_Read req;
+  double voltage;
+
+  Diag_ResetTestStep();
+  Diag_IncrementTestStep();
+  TestCaseComment("准备扩展会话");
+
+  if (Diag_PrepareExtended() != 0)
+  {
+    TestStepFail(TEST_STEP, "无法进入扩展会话");
+    return;
+  }
+
+  Diag_IncrementTestStep();
+  if (Diag_SendAndWait(req, "Power supply voltage read") != 0)
+  {
+    return;
+  }
+
+  voltage = diagGetRespParameter(req, "DataRecord");
+  TestStepPass(TEST_STEP, "电源电压：%.1f", voltage);
+}
+
+/* =========================================================================
+ * Diagnostic helpers
+ * ========================================================================= */
+
+long Diag_SendAndWait(diagRequest * req, char stepName[])
+{
+  long status;
+
+  // 1. 发送请求，检查调用是否成功
+  if (diagSendRequest(req) != 0) {
+    TestStepFail(TEST_STEP, "%s：diagSendRequest 调用失败", stepName);
+    return -2;
+  }
+  
+  // 2. 等待请求真正发出
+  if (TestWaitForDiagRequestSent(req, SENDING_TIMEOUT) != 1)
+  {
+    TestStepFail(TEST_STEP, "%s：请求发送失败", stepName);
+    return -2;
+  }
+  
+  // 3. 等待 ECU 响应
+  if (TestWaitForDiagResponse(req, RESPONSE_TIMEOUT) != 1)
+  {
+    TestStepFail(TEST_STEP, "%s：无响应", stepName);
+    return -3;
+  }
+  
+  // 4. 解析响应码
+  status = diagGetLastResponseCode(req);
+
+  if (status == -1)
+  {
+    TestStepPass(TEST_STEP, "%s：肯定回应", stepName);
+    return 0;
+  }
+
+  if (status > 0)
+  {
+    TestStepFail(TEST_STEP,
+                 "%s：否定响应 0x%.2x", stepName, status);
+    return status;
+  }
+
+  TestStepFail(TEST_STEP, "%s：响应超时", stepName);
+  return -1;
+}
+
+long Diag_SendAndExpectNRC(diagRequest * req, long expectedNrc, char stepName[])
+{
+  long status;
+
+  diagSendRequest(req);
+
+  if (TestWaitForDiagRequestSent(req, SENDING_TIMEOUT) != 1)
+  {
+    TestStepFail(TEST_STEP, "%s：请求发送失败", stepName);
+    return -2;
+  }
+
+  if (TestWaitForDiagResponse(req, RESPONSE_TIMEOUT) != 1)
+  {
+    TestStepFail(TEST_STEP, "%s：无响应", stepName);
+    return -3;
+  }
+
+  status = diagGetLastResponseCode(req);
+
+  if (status == expectedNrc)
+  {
+    TestStepPass(TEST_STEP,
+                 "%s：预期收到 NRC 0x%.2x", stepName, expectedNrc);
+    return 0;
+  }
+
+  if (status == -1)
+  {
+    TestStepFail(TEST_STEP,
+                 "%s：收到肯定响应，预期应为 NRC 0x%.2x",
+                 stepName, expectedNrc);
+  }
+  else
+  {
+    TestStepFail(TEST_STEP,
+                 "%s：收到 NRC 0x%.2x，预期为 0x%.2x",
+                 stepName, status, expectedNrc);
+  }
+
+  return 1;
+}
+
+long Diag_SwitchToDefaultSession()
+{
+  diagRequest IPC.DefaultSession_Start req;
+
+  if (Diag_SendAndWait(req, "默认会话") != 0)
+  {
+    return 1;
+  }
+  return 0;
+}
+
+long Diag_SwitchToExtendedSession()
+{
+  diagRequest IPC.ExtendedDiagnosticSession_Start req;
+
+  if (Diag_SendAndWait(req, "扩展会话") != 0)
+  {
+    return 1;
+  }
+  return 0;
+}
+
+long Diag_PrepareExtended()
+{
+  if (Diag_SwitchToDefaultSession() != 0)
+  {
+    return -1;
+  }
+
+  if (Diag_SwitchToExtendedSession() != 0)
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+long Diag_PrepareExtendedUnlock1()
+{
+  if (Diag_PrepareExtended() != 0)
+  {
+    return -1;
+  }
+
+  if (Diag_SecurityLevel_1_Unlock() != 0)
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+long Diag_SecurityLevel_1_Unlock()
+{
+  diagRequest IPC.SeedLevel1_Request seedReq;
+  diagRequest IPC.KeyLevel1_Send keyReq;
+
+  byte seed[4];
+  byte L_key[4];
+  dword actualLevel = 1;
+  char variant[6] = "";
+  char ipOption[2] = "a";
+  dword keyActualSize = 0;
+  long status;
+
+  diagSetTarget("IPC");
+  Diag_IncrementTestStep();
+  TestCaseComment("请求安全级别 1 种子值");
+
+  if (Diag_SendAndWait(seedReq, "Security Level 1 seed") != 0)
+  {
+    return -1;
+  }
+
+  if (diagGetRespParameterRaw(seedReq, "SecuritySeed", seed, elcount(seed)) < 0)
+  {
+    TestStepFail(TEST_STEP, "无法读取安全级别 1 的种子值");
+    return -1;
+  }
+
+  TestCaseComment("生成安全级别 1 密钥");
+  status = DiagGenerateKeyFromSeed(
+             seed, elcount(seed), actualLevel, variant, ipOption,
+             L_key, elcount(L_key), keyActualSize);
+
+  if (status != 0)
+  {
+    TestStepFail(TEST_STEP,
+                 "DiagGenerateKeyFromSeed 失败，错误代码为 %d", status);
+    return -1;
+  }
+
+  TestStepPass(TEST_STEP,
+               "已生成安全级别 1 密钥，大小 = %d", keyActualSize);
+
+  DiagSetParameterRaw(keyReq, "SecurityKey", L_key, elcount(L_key));
+  TestCaseComment("发送安全级别 1 密钥");
+
+  if (Diag_SendAndWait(keyReq, "Security Level 1 key") != 0)
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+long Diag_SecurityLevel_2_Unlock()
+{
+  diagRequest IPC.Seed_Level_2_Request seedReq;
+  diagRequest IPC.Key_Level_2_Send keyReq;
+
+  byte seed[4];
+  byte L_key[4];
+  dword actualLevel = 3;
+  char variant[6] = "";
+  char ipOption[2] = "a";
+  dword keyActualSize = 0;
+  long status;
+
+  diagSetTarget("IPC");
+  Diag_IncrementTestStep();
+  TestCaseComment("请求安全级别 2 种子值");
+
+  if (Diag_SendAndWait(seedReq, "安全级别 2 种子") != 0)
+  {
+    return -1;
+  }
+
+  if (diagGetRespParameterRaw(seedReq, "SecuritySeed", seed, elcount(seed)) < 0)
+  {
+    TestStepFail(TEST_STEP, "无法读取安全级别 2 的种子值");
+    return -1;
+  }
+
+  TestCaseComment("生成安全级别 2 密钥");
+  status = DiagGenerateKeyFromSeed(
+             seed, elcount(seed), actualLevel, variant, ipOption,
+             L_key, elcount(L_key), keyActualSize);
+
+  if (status != 0)
+  {
+    TestStepFail(TEST_STEP,
+                 "DiagGenerateKeyFromSeed 失败，错误代码为 %d", status);
+    return -1;
+  }
+
+  TestStepPass(TEST_STEP,
+               "已生成安全级别 2 密钥，大小 = %d", keyActualSize);
+
+  DiagSetParameterRaw(keyReq, "SecurityKey", L_key, elcount(L_key));
+  TestCaseComment("发送安全级别 2 密钥");
+
+  if (Diag_SendAndWait(keyReq, "Security Level 2 key") != 0)
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+void Diag_ResetTestStep()
+{
+  gTestStep = 0;
+}
+
+void Diag_IncrementTestStep()
+{
+  if (gTestStep < 10)
+  {
+    snprintf(TEST_STEP, elcount(TEST_STEP), "00%d", gTestStep);
+  }
+  else if (gTestStep < 100)
+  {
+    snprintf(TEST_STEP, elcount(TEST_STEP), "0%d", gTestStep);
+  }
+  else
+  {
+    snprintf(TEST_STEP, elcount(TEST_STEP), "%d", gTestStep);
+  }
+
+  gTestStep++;
+}

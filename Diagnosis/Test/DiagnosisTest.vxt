@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    CANoe 12.0，测试模块架构 1.27。 
+
+    CAPL 组件：DiagnosisTest_Lib.can
+    仿真节点：Nodes/IPC.can (ECU)。 
+
+    XML 拥有诊断测试层次结构、顺序和变量选择。 
+    DiagnosisTest_Lib.can 拥有请求/响应逻辑，包括
+    之前由诊断面板触发的读/写测试
+-->
+<testmodule xmlns="http://www.vector-informatik.de/CANoe/TestModule/1.27"
+            title="IPC Diagnosis Tests"
+            version="1.0">
+
+  <description>针对组合仪表（IPC）仿真的UDS诊断测试：会话控制、VIN（车辆识别码）、生产日期、序列号、变体编码、当前会话以及DID（数据标识符）读取。</description>
+
+  <variants>
+    <variant name="All">所有诊断性检查</variant>
+    <variant name="Smoke">诊断性烟雾测试</variant>
+    <variant name="Session">会话控制</variant>
+    <variant name="VIN">VIN 读/写</variant>
+    <variant name="Data">生产日期、序列号及型号编码</variant>
+    <variant name="DID">活动会话与 DID 读取</variant>
+    <variant name="Negative">负面响应测试</variant>
+    <variant name="Tester">从 Tester.can 面板逻辑迁移而来的测试</variant>
+  </variants>
+
+  <preparation>
+    <capltestfunction name="InitDiagnosis"
+                      title="Init diagnostic environment"/>
+  </preparation>
+
+  <!-- =====================================================================
+       Session control
+       ===================================================================== -->
+  <testgroup title="Session Control" ident="D1">
+    <description>默认会话与扩展会话之间的切换，以及无效的生产会话请求</description>
+
+    <capltestcase name="DiagTest_Session_Switch"
+                  title="DIAG-01: 会话切换（默认 -> 扩展 -> 默认）"
+                  ident="DIAG-01"
+                  variants="Session Smoke All"/>
+
+    <capltestcase name="DiagTest_ProductionSessionFromDefault"
+                  title="DIAG-02: 在默认会话中，生产会话被拒绝"
+                  ident="DIAG-02"
+                  variants="Session Negative All"/>
+  </testgroup>
+
+  <!-- =====================================================================
+       VIN
+       ===================================================================== -->
+  <testgroup title="VIN Read/Write" ident="D2">
+    <description>VIN 读写功能</description>
+
+    <capltestcase name="DiagTest_VIN_WriteAndRead"
+                  title="DIAG-03: VIN 写入与回读"
+                  ident="DIAG-03"
+                  variants="VIN Tester Smoke All"/>
+
+    <capltestcase name="DiagTest_VINWriteWithoutSecurity"
+                  title="DIAG-04: 在未进行安全验证的情况下写入 VIN 被拒绝"
+                  ident="DIAG-04"
+                  variants="VIN Negative All"/>
+  </testgroup>
+
+  <!-- =====================================================================
+       生产日期
+       ===================================================================== -->
+  <testgroup title="Manufacturing Date" ident="D3">
+    <description>生产日期的写入/读取功能</description>
+
+    <capltestcase name="DiagTest_ManufacturingDate_Write"
+                  title="DIAG-05: 填写生产日期"
+                  ident="DIAG-05"
+                  variants="Data Tester All"/>
+
+    <capltestcase name="DiagTest_ManufacturingDate_Read"
+                  title="DIAG-06: 读取生产日期"
+                  ident="DIAG-06"
+                  variants="Data Tester All"/>
+  </testgroup>
+
+  <!-- =====================================================================
+       序列号
+       ===================================================================== -->
+  <testgroup title="Serial Number" ident="D4">
+    <description>序列号的读写功能</description>
+
+    <capltestcase name="DiagTest_SerialNumber_WriteAndRead"
+                  title="DIAG-07: 序列号写入与回读"
+                  ident="DIAG-07"
+                  variants="Data Tester All"/>
+
+    <capltestcase name="DiagTest_SerialNumber_Read"
+                  title="DIAG-08: 读取序列号"
+                  ident="DIAG-08"
+                  variants="Data Tester All"/>
+  </testgroup>
+
+  <!-- =====================================================================
+       变体编码
+       ===================================================================== -->
+  <testgroup title="Variant Coding" ident="D5">
+    <description>变体编码的读写功能已从 Tester.can 面板逻辑中迁移出来</description>
+
+    <capltestcase name="DiagTest_VariantCoding_WriteAndRead"
+                  title="DIAG-09: 变体编码的写入与回读"
+                  ident="DIAG-09"
+                  variants="Data Tester All"/>
+
+    <capltestcase name="DiagTest_VariantCoding_Read"
+                  title="DIAG-10: 变体编码读取"
+                  ident="DIAG-10"
+                  variants="Data Tester All"/>
+  </testgroup>
+
+  <!-- =====================================================================
+       活动会话与 DID 读取
+       ===================================================================== -->
+  <testgroup title="Active Session and DID Read" ident="D6">
+    <description>激活诊断会话及数据标识符读取</description>
+
+    <capltestcase name="DiagTest_ActiveSession_Read"
+                  title="DIAG-11: 读取当前诊断会话"
+                  ident="DIAG-11"
+                  variants="DID Smoke All"/>
+
+    <capltestcase name="DiagTest_DID_EngineSpeed_Read"
+                  title="DIAG-12: DID 发动机转速读数"
+                  ident="DIAG-12"
+                  variants="DID Smoke All"/>
+
+    <capltestcase name="DiagTest_DID_EngineTemperature_Read"
+                  title="DIAG-13: DID 发动机温度读数"
+                  ident="DIAG-13"
+                  variants="DID All"/>
+
+    <capltestcase name="DiagTest_PowerSupplyVoltage_Read"
+                  title="DIAG-14: 电源电压读数"
+                  ident="DIAG-14"
+                  variants="DID All"/>
+  </testgroup>
+
+</testmodule>
