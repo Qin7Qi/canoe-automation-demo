@@ -2,7 +2,7 @@ pipeline {
     agent { label 'canoe-agent' }
 
     environment {
-        PROJECT_DIR = 'Vehicle_System_Simulation'
+        PROJECT_DIR = 'CANoe_AutoRun'
         PYTHON      = 'python'
     }
 
