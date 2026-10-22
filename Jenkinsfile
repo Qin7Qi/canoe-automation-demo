@@ -2,7 +2,7 @@ pipeline {
     agent { label 'canoe-agent' }
 
     environment {
-        PROJECT_DIR = 'CANoe_AutoRun'
+        PROJECT_DIR = ''
         PYTHON      = 'python'
     }
 
@@ -20,7 +20,7 @@ pipeline {
     stages {
         stage('Install Dependencies') {
             steps {
-                bat "${PYTHON} -m pip install -r ${PROJECT_DIR}/pytests/requirements.txt"
+                bat "${PYTHON} -m pip install -r pytests/requirements.txt"
             }
         }
 
@@ -28,7 +28,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 // 关键：先 cd 到工程根目录，main.py 的相对路径才正确
-                bat "cd ${PROJECT_DIR} && ${PYTHON} pytests\\test.py"
+                bat "${PYTHON} pytests\\test.py"
             }
         }
 
