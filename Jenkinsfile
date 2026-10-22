@@ -17,6 +17,7 @@ pipeline {
         githubPush()
     }
 
+    stages {
         stage('Install Dependencies') {
             steps {
                 bat "${PYTHON} -m pip install -r ${PROJECT_DIR}/pytests/requirements.txt"
@@ -44,7 +45,7 @@ pipeline {
     //             bat "cd ${PROJECT_DIR} && ${PYTHON} pytests\\tools\\convert_reports.py"
     //         }
     //     }
-    // }
+    }
 
     // post {
     //     always {
