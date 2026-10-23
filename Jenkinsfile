@@ -2,7 +2,7 @@ pipeline {
     agent { label 'canoe-agent' }
 
     environment {
-        PROJECT_DIR = ''
+        PYTHONIOENCODING = 'utf-8'
         PYTHON      = 'python'
     }
 
@@ -14,7 +14,8 @@ pipeline {
     }
 
     triggers {
-        githubPush()
+        // 每 5 分钟检查一次 Git 仓库是否有新提交
+        pollSCM('H/5 * * * *')
     }
 
     stages {
@@ -36,13 +37,13 @@ pipeline {
         stage('Run CANoe Tests') {
             steps {
                 // 关键：先 cd 到工程根目录，main.py 的相对路径才正确
-                bat "${PYTHON} pytests\\main.py"
+                bat "chcp 65001 >nul && ${PYTHON} pytests\\main.py"
             }
         }
 
         stage('Convert Reports to JUnit') {
             steps {
-                bat "${PYTHON} pytests\\tools\\convert_reports.py"
+                bat "chcp 65001 >nul && ${PYTHON} pytests\\tools\\convert_reports.py"
             }
         }
     }
