@@ -28,6 +28,7 @@ MODULES = {
 
 
 def main():
+    print("测试轮询git")
     parser = argparse.ArgumentParser(description="顺序启动 CANoe 并运行 XML Test Module")
     parser.add_argument(
         "--module",
