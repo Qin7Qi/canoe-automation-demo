@@ -1,37 +1,47 @@
 ﻿/*@!Encoding:65001*/
 includes
 {
-  //To add the head files
 }
 
 variables
 {
-  enum ESession {DefaultSession, ExtendedSession, ProductionSession};
+  //会话状态：默认会话、扩展会话、生产会话。
+  enum ESession {DefaultSession, ExtendedSession, ProductionSession}; 
+  //安全等级：锁定、1级解锁、2级解锁。
   enum ESecurityLevel {Lock, Unlock_1, Unlock_2};
   int CURRENT_SESSION;
   int CURRENT_SECURITY_LEVEL;
+  //P2/P2Ex 时间参数
   byte SESSION_TIMING_P2[2] = {0x00, 0x96};
   byte SESSION_TIMING_PX[2] = {0x00, 0xC8};
+
   byte MANUFACTURING_DATE[3] = {18, 10, 18};
+  //序列号和 VIN
   byte SERIAL_NUMBER[9] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39};
   byte VEHICLE_IDENTIFICATION_NUMBER[17] = {0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39};
+  //发动机转速、发动机温度
   byte Speedbuffer[2],EngTempbuffer[1];
+  //安全访问用：种子、ECU钥匙、诊断仪钥匙。
   byte SECURITY_SEED[4];
   byte SECURITY_KEY[4]; 
   byte SECURITY_KEY_RECEIVED[4];
+
   double countrycode=0,vehicletype=3,beltwarning=0,overspeedwarning=0;
-  int busflag=0; //current bus status: 0 - Deactivate CANoe IL ; 1 - Activate CANoe IL 
-  //To add the variables
+  //前 IL 状态：0=停发，1=发
+  int busflag=0;  
+
 }
 
 
 ///////////////////////////////////////////////////////Function/////////////////////////////////////////////////////////
+//初始化 CANoe IL
 on preStart
 {
-  ILControlInit(); //Initialize CANoe IL 
-  ILControlStop(); //Deactivate CANoe IL 
+  ILControlInit(); 
+  ILControlStop();  
 }
 
+//诊断会话置为默认会话
 on start
 {
   CURRENT_SESSION=DefaultSession;
@@ -53,7 +63,7 @@ on signal_update LockStatus
   }
 }
 
-
+//IPC 面板显示当前档位
 on signal_update Gear
 {
   @Cluster::Gear_Status= this;   //To display current Gear status in panel
@@ -63,9 +73,12 @@ on signal_update Gear
 //////////////////////////////////////////////////////Diagnosis/////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////Session///////////////////////////////////////////////////////////
+
+//会话控制
+//处理切换到默认会话的请求
 on diagRequest IPC.DefaultSession_Start
 {
-  //Set parameter and response for default session request
+  //设置默认会话请求的参数与响应
   diagResponse this resp;
   resp.SetParameterRaw("P2",SESSION_TIMING_P2,elCount(SESSION_TIMING_P2));
   resp.SetParameterRaw("P2Ex",SESSION_TIMING_PX,elCount(SESSION_TIMING_PX));
@@ -76,9 +89,10 @@ on diagRequest IPC.DefaultSession_Start
   resp.SendPositiveResponse(); 
 }
 
+//处理切换到扩展会话的请求
 on diagRequest IPC.ExtendedDiagnosticSession_Start
 {
-  //Set parameter and response for extended session request
+  //设置扩展会话请求的参数及响应
   diagResponse this resp;
   resp.SetParameterRaw("P2",SESSION_TIMING_P2,elCount(SESSION_TIMING_P2));
   resp.SetParameterRaw("P2Ex",SESSION_TIMING_PX,elCount(SESSION_TIMING_PX));
@@ -87,11 +101,12 @@ on diagRequest IPC.ExtendedDiagnosticSession_Start
   resp.SendPositiveResponse(); 
 }
 
+//处理切换到生产会话的请求
 on diagRequest IPC.Production_Session_Start
 {
-  //Set parameter and response for production session request
+  //为生产环境会话请求设置参数及响应
   diagResponse this resp;
-  //Judge the positive request condition
+  //判断肯定请求条件
   if(CURRENT_SESSION==ExtendedSession)
   {
     resp.SetParameterRaw("P2",SESSION_TIMING_P2,elCount(SESSION_TIMING_P2));
@@ -109,11 +124,13 @@ on diagRequest IPC.Production_Session_Start
 //////////////////////////////////////////////////////Session///////////////////////////////////////////////////////////
 
 /////////////////////////////////////////Manufacture Date Read/Write////////////////////////////////////
+
+//读取制造日期
 on diagRequest IPC.ECU_Manufacturing_Date_Read
 {
-  //Set parameter and response for ECU_Manufacturing_Date_Read request
+  //设置 ECU_Manufacturing_Date_Read 请求的参数及响应
   diagResponse this resp;
-  //Judge the positive request condition
+  //判断肯定请求条件
   if(@Diagnosis::Manufacture_Date_NRC==1)
   {
     resp.SendNegativeResponse(0x22);
@@ -127,12 +144,14 @@ on diagRequest IPC.ECU_Manufacturing_Date_Read
   }
 }
 
+//写制造日期
 on diagRequest IPC.ECU_Manufacturing_Date_Write
 {
-  //Judge the positive request condition for ECU_Manufacturing_Date_Write request
+  //针对 ECU_Manufacturing_Date_Write 请求，判定其正向请求条件。
   diagResponse this resp;
   if(CURRENT_SECURITY_LEVEL==Unlock_1)
   {
+    //模拟“写权限通过”，不真正更新数组
      resp.SendPositiveResponse(); 
   }
   else
@@ -141,9 +160,11 @@ on diagRequest IPC.ECU_Manufacturing_Date_Write
 /////////////////////////////////////////Manufacture Date Read/Write////////////////////////////////////
 
 ////////////////////////////////////////Serial Number Read/Write///////////////////////////////////////
+
+//读取序列号
 on diagRequest IPC.ECU_Serial_Number_Read
 {
-  //Set parameter and response for ECU_Serial_Number_Read request
+  //为 ECU_Serial_Number_Read 请求设置参数及响应
   diagResponse this resp;
   if(@Diagnosis::Serial_Number_NRC)
   {
@@ -157,6 +178,7 @@ on diagRequest IPC.ECU_Serial_Number_Read
 
 }
 
+//写序列号
 on diagRequest IPC.ECU_Serial_Number_Write
 {
   diagResponse this resp;
@@ -171,9 +193,11 @@ on diagRequest IPC.ECU_Serial_Number_Write
 ////////////////////////////////////////Serial Number Read/Write///////////////////////////////////////
 
 ///////////////////////////////////ECU Identification Number Read/Write////////////////////////////////
+
+//读取 VIN
 on diagRequest IPC.Vehicle_Identification_Number_Read
 {
-  //Set parameter and response for Vehicle_Identification_Number_Read request
+  //为“读取车辆识别码 (Vehicle_Identification_Number_Read)”请求设置参数及响应
   diagResponse this resp;
   long ret;
   write("Vehicle_Identification_Number_Read");
@@ -197,6 +221,7 @@ on diagRequest IPC.Vehicle_Identification_Number_Read
     resp.SendNegativeResponse(0x33);
 }
 
+//写 VIN
 on diagRequest IPC.Vehicle_Identification_Number_Write
 {
   diagResponse this resp;
@@ -211,9 +236,11 @@ on diagRequest IPC.Vehicle_Identification_Number_Write
 ///////////////////////////////////ECU Identification Number Read/Write////////////////////////////////
 
 //////////////////////////////////////Variant Coding Read/Write////////////////////////////////////////
+
+//读取变体编码
 on diagRequest IPC.Variant_Coding_Read
 {
-  //Set parameter and response for Variant_Coding_Read request
+  //为 Variant_Coding_Read 请求设置参数及响应
   diagResponse this resp;
   if(@Diagnosis::Variant_Coding_NRC)
   {
@@ -229,6 +256,7 @@ on diagRequest IPC.Variant_Coding_Read
   }
 }
 
+//写变体编码
 on diagRequest IPC.Variant_Coding_Write
 {
   diagResponse this resp;
@@ -247,6 +275,8 @@ on diagRequest IPC.Variant_Coding_Write
 //////////////////////////////////////Variant Coding Read/Write////////////////////////////////////////
 
 //////////////////////////////////////////////////DID//////////////////////////////////////////////////
+
+//每收到一帧 EngineData 报文，就缓存 DID 读取要用的原始数据
 on message EngineData
 {
   EngTempbuffer[0]=this.byte(0)*2;
@@ -254,22 +284,24 @@ on message EngineData
   Speedbuffer[0]=this.byte(3);
 }
 
+//读取发动机转速 DID
 on diagRequest IPC.DID_Engine_Speed_Read
 {
-  //Set parameter and response for DID_Engine_Speed_Read request
+  //为 DID_Engine_Speed_Read 请求设置参数及响应
   diagResponse this resp;
   resp.SetParameterRaw("DID_Engine_Speed",Speedbuffer,elcount(Speedbuffer));
   resp.SendPositiveResponse();
 }
 
+//读取发动机温度 DID
 on diagRequest IPC.DID_Engine_Temperature_Read
 {
-  //Set parameter and response for DID_Engine_Temperature_Read request
   diagResponse this resp;
   resp.SetParameterRaw("DID_Engine_Temperature",EngTempbuffer,elcount(EngTempbuffer));
   resp.SendPositiveResponse();  
 }
 
+//读取电源电压 DID
 on diagRequest IPC.Power_Supply_Voltage_Read
 {
   //Set parameter and response for Power_Supply_Voltage_Read request
@@ -280,9 +312,10 @@ on diagRequest IPC.Power_Supply_Voltage_Read
 //////////////////////////////////////////////////DID//////////////////////////////////////////////////
 
 /////////////////////////////////////////////Active Session////////////////////////////////////////////
+
+//返回当前诊断会话类型
 on diagRequest IPC.Active_Diagnostic_Session_Read
 {
-  //Set parameter and response for Active_Diagnostic_Session_Read request
   diagResponse this resp;
   switch (CURRENT_SESSION)
   {
@@ -307,9 +340,9 @@ on diagRequest IPC.Active_Diagnostic_Session_Read
 /////////////////////////////////////////////Active Session////////////////////////////////////////////
 
 //////////////////////////////////////////////Security/////////////////////////////////////////////////
+//请求 1 级安全访问种子
 on diagRequest IPC.SeedLevel1_Request
 {
-  //Generate level1 security key and send response
   diagResponse this resp;
   if(CURRENT_SESSION==ExtendedSession)
   {
@@ -320,12 +353,12 @@ on diagRequest IPC.SeedLevel1_Request
     resp.SendPositiveResponse();     
   }
   else 
-    resp.SendNegativeResponse(0x7E);//Sub function not supported in current session
+    resp.SendNegativeResponse(0x7E);
 }
 
+//校验诊断仪发来的 1 级钥匙
 on diagRequest IPC.KeyLevel1_Send
 {
-  //Varify the level1 security key 
   diagResponse this resp;
   this.GetParameterRaw("SecurityKey",SECURITY_KEY_RECEIVED,elCount(SECURITY_KEY_RECEIVED));
   if(KEY_VERIFY()==1)
@@ -335,12 +368,12 @@ on diagRequest IPC.KeyLevel1_Send
     @Diagnosis::Security_Level=1;
   }
   else
-    resp.SendNegativeResponse(0x35);//Invalid key
+    resp.SendNegativeResponse(0x35);
 }
 
+//请求 2 级安全访问种子
 on diagRequest IPC.Seed_Level_2_Request
 {
-  //Generate level2 security key and send response
   diagResponse this resp;
   if(CURRENT_SECURITY_LEVEL==Unlock_1)
   {
@@ -354,9 +387,9 @@ on diagRequest IPC.Seed_Level_2_Request
 
 }
 
+//校验 2 级钥匙
 on diagRequest IPC.Key_Level_2_Send
 {
-  //Varify the level2 security key 
   diagResponse this resp;
   this.GetParameterRaw("SecurityKey",SECURITY_KEY_RECEIVED,elCount(SECURITY_KEY_RECEIVED));
   if(KEY_VERIFY()==1)
@@ -369,6 +402,7 @@ on diagRequest IPC.Key_Level_2_Send
     resp.SendNegativeResponse(0x35);  
 }
 
+//生成 4 字节安全种子
 void Seed_Generation()
 {
   //Generate seed
@@ -400,6 +434,7 @@ void KeyLevel2_Calculate()
   SECURITY_KEY[2] = temp;
 }
 
+//比较 SECURITY_KEY 和 SECURITY_KEY_RECEIVED 的 4 个字节
 int KEY_VERIFY()
 {
   //Verify the security key;
@@ -414,6 +449,8 @@ int KEY_VERIFY()
 //////////////////////////////////////////////Security/////////////////////////////////////////////////
 
 /////////////////////////////////////////////Conmmunication Control////////////////////////////////////
+
+//诊断仪请求“使能接收、禁止发送”
 on diagRequest IPC.EnableRxAndDisableTx_Control
 {
   //Send negative response for EnableRxAndDisableTx_Control request
@@ -421,6 +458,7 @@ on diagRequest IPC.EnableRxAndDisableTx_Control
   resp.SendNegativeResponse(0x12);  
 }
 
+//诊断仪请求“使能接收、使能发送”
 on diagRequest IPC.EnableRxAndEnableTx_Control
 {
   //Send negative response for EnableRxAndEnableTx_Control request
@@ -430,6 +468,7 @@ on diagRequest IPC.EnableRxAndEnableTx_Control
 /////////////////////////////////////////////Conmmunication Control////////////////////////////////////
 
 //////////////////////////////////////////////////Hard Reset///////////////////////////////////////////
+诊断仪请求硬复位
 on diagRequest IPC.HardReset_Reset
 {
   //Send negative response for HardReset_Reset request

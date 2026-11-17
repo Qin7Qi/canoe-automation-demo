@@ -6,18 +6,18 @@ includes
 
 variables
 {
-  msTimer msTVehSpeedDown; //define the timer(ms) for Vehicle Speed down
-  msTimer msTEngSpeedDown; //define the timer(ms) for Engine Speed down
-  dword WritePage;
-  int busflag=0; //current bus status: 0 - Deactivate CANoe IL ; 1 - Activate CANoe IL 
+  msTimer msTVehSpeedDown;  // 车速下降定时器
+  msTimer msTEngSpeedDown;  //发动机转速下降定时器
+  dword WritePage;          //Write 窗口页面句柄
+  int busflag=0;            //当前总线/IL 状态：0=IL 停止，1=IL 启动
 }
 
+//初始化
 on preStart
 {
-  ILControlInit(); //Initialize CANoe IL 
-  ILControlStop(); //Deactivate CANoe IL 
+  ILControlInit(); 
+  ILControlStop();
   
-  //Write simulation information in write window
   writeLineEx(WritePage,1,"--------This demo demonstrated the CAN bus simulation!!--------"); 
   writeLineEx(0,1,"Press <1> to start/stop CAN_logging");  
 }
@@ -30,19 +30,19 @@ on key '1'
   {
     logflag=1;
     write("CAN logging starts");
-    //start logging Logging CAN with a pretrigger with 500ms
+    //开始记录 CAN 数据，并设置 500 毫秒的预触发。
     startlogging("CAN_Logging",500);
   }
   else 
   {
     logflag=0;
     write("CAN logging ends");
-    //stop logging Logging CAN with a posttriggre with 1000ms
+    //停止记录 CAN 数据，并设置 1000 毫秒的后触发（post-trigger）。
     stoplogging("CAN_Logging",1000);
   }   
 }
 
-
+//根据锁车状态控制 IL
 on signal_update LockStatus
 {
   if(this!=busflag)
@@ -59,34 +59,37 @@ on signal_update LockStatus
   }
 }
 
+//档位映射
 on sysvar Vehicle_Control::Gear
 {
-  $Gear=@this;      //Change Gear status based on user operation
+  $Gear=@this;      
 }
 
+//初始化发动机数据
 void EngineData_Init(void)
 {
-  //Initialize the data of Engine
   $VehicleSpeed=0;
   $EngSpeed=0;
   $EngTemp=0;
   $PetrolLevel=0;
 }
 
+//钥匙状态影响发动机数据
 on signal_update KeyState
 {
   if(this==0)
   {
-    EngineData_Init();   //Init engine data based on KeyState
+    EngineData_Init();   
   }
   if(this>0)
   {
-    $PetrolLevel=255;    //Init PetrolLevel based on KeyState
+    $PetrolLevel=255;    //油量
   }
 }
+
+//发动机转速映射
 on sysvar_update Vehicle_Control::Eng_Speed     
 {
-  //Engine speed only available when Key is ON
   write("[Vehicle_Control::Eng_Speed] 时间=%.3f, 值=%.2f", timeNow(), this);
   write("[@Vehicle_Key::Key_State] 时间=%.3f, 值=%.2f", timeNow(), @Vehicle_Key::Key_State);
   if(@Vehicle_Key::Key_State==2)
@@ -99,9 +102,9 @@ on sysvar_update Vehicle_Control::Eng_Speed
   }
 }
 
+//车速映射
 on sysvar_update Vehicle_Control::Veh_Speed
 {
-  //Vehicle speed only available when Gear is Drive and Key is ON
   if((@Vehicle_Control::Gear==3)&&(@Vehicle_Key::Key_State==2))
   {
     $VehicleData::VehicleSpeed=@this;
@@ -112,8 +115,8 @@ on sysvar_update Vehicle_Control::Veh_Speed
   }
 }
 
-//only for simulation
-on sysvar_update Vehicle_Control::Speed_Up  //Speed up when sysvar speed_up enabled
+//模拟加速
+on sysvar_update Vehicle_Control::Speed_Up  
 {
   if($EngTemp<90)
   {
@@ -139,7 +142,8 @@ on sysvar_update Vehicle_Control::Speed_Up  //Speed up when sysvar speed_up enab
   }
 }
 
-on sysvar Vehicle_Control::Brake    //Speed down when Brake is enable
+//刹车减速
+on sysvar Vehicle_Control::Brake    
 {
   int i;
   if(@this==1)
@@ -156,7 +160,8 @@ on sysvar Vehicle_Control::Brake    //Speed down when Brake is enable
   }
 }
 
-on timer msTVehSpeedDown      //Implement speed down function
+//车速递减
+on timer msTVehSpeedDown      
 {
   @Vehicle_Control::Veh_Speed=@Vehicle_Control::Veh_Speed-1;
   setTimer(this,50);
@@ -167,7 +172,8 @@ on timer msTVehSpeedDown      //Implement speed down function
    }
 }
 
-on timer msTEngSpeedDown    //Implement engine speed down function
+发动机转速递减
+on timer msTEngSpeedDown    
 {
   @Vehicle_Control::Eng_Speed=@Vehicle_Control::Eng_Speed-40;
   setTimer(this,50);  

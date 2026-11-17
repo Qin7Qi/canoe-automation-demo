@@ -6,43 +6,42 @@ includes
 
 variables
 {
-  msTimer msTcrank;      //define the timer(ms) for crank delay
-  msTimer msTIL;         //define the timer(ms) for deactivate CANoe IL
-  int flashPeriod=500;   //Hazards flash cycle
+  msTimer msTcrank;      // 钥匙从 Crank 回 Run 的延时
+  msTimer msTIL;         // 锁车后延迟停止 IL
+  int flashPeriod=500;   // 转向灯/双闪的闪烁周期，500ms
 
-  int TurnLightStatus;   //define the turn light status: 0 - both off; 1 - Left flash; 2 - Right flash; 3 - Hazards on
-  msTimer msTleftflash,msTrightflash; //define the timers(ms) for Left/Right Light flash
-  message Driver_Info Msgdriver; //define the message for driver info
+  int TurnLightStatus;   // 0=全灭，1=左转，2=右转，3=双闪
+  msTimer msTleftflash,msTrightflash; // 左右转向灯闪烁定时器
+  message Driver_Info Msgdriver; //驾驶信息报文
 }
 
 on preStart
 {
-  ILControlInit(); //Initialize CANoe IL 
-  ILControlStop(); //Deactivate CANoe IL 
+  ILControlInit(); // 初始化交互层
+  ILControlStop(); // 先停止 IL，测量启动前总线保持干净
 }
 
-//to process the key position
+//钥匙状态：Crank 模拟
 on sysvar_update Vehicle_Key::Key_State
 {
   $Ignition_Info::KeyState=@this;
   if(@this==3)
   {
     @Vehicle_Control::Speed_Up=0;
-    setTimer(msTcrank,800);   //Simulate the crank behavior    
+    setTimer(msTcrank,800);      
   }
 }
 
-//return to Run status from Crank after 800ms
+
 on timer msTcrank
 {
-  $KeyState=2; //Simulate the crank behavior
+  $KeyState=2; 
   @sysvar::Vehicle_Key::Key_State =2;
 }
 
-//to process the driver ID change
 on sysvar_update Vehicle_Key::Car_Driver
 {
-  //Set the value of driver ID based on system variable Car_Driver
+  //根据系统变量 Car_Driver 设置驾驶信息的值。
   if(@this==1)
   {
     Msgdriver.byte(0)=0;
@@ -54,7 +53,7 @@ on sysvar_update Vehicle_Key::Car_Driver
   output(Msgdriver);
 }
 
-//to process the event of Unlock Car
+//解锁: IL 启动
 on sysvar_update Vehicle_Key::Unlock_Car
 {
   if(@this==1)
@@ -65,20 +64,23 @@ on sysvar_update Vehicle_Key::Unlock_Car
   }
 }
 
-//to process the event of Lock Car
+//锁车
 on sysvar_update Vehicle_Key::Lock_Car
 {
   if(@this==1)
   {
     $LockStatus=0;
-    setTimer(msTIL,1500); //wait 1.5s to make sure other ECUs are offline
+    setTimer(msTIL,1500); 
   }
 }
 
+//停止 IL
 ON Timer msTIL
 {
   ILControlStop();
 }
+
+//关闭所有灯光
 void LightOFF(void)
 {
   //Initilize the light status
@@ -87,7 +89,8 @@ void LightOFF(void)
   $LightStatus=0;  
 }
 
-////////////////////To realize the functions of turn left,turn right and Hazards///////////////
+////////////////////实现左转、右转及危险报警闪光灯功能///////////////
+//左转
 on sysvar Vehicle_Control::Left_Turn_Enable
 {
   if(@this==1)
@@ -113,6 +116,7 @@ on timer msTleftflash
   setTimer(msTleftflash,flashPeriod);
 }
 
+//右转
 on sysvar Vehicle_Control::Right_Turn_Enable
 {
   if(@this==1)
@@ -138,6 +142,7 @@ on timer msTrightflash
   setTimer(msTrightflash,flashPeriod);
 }
 
+//双闪
 on sysvar Vehicle_Control::Hazards_Enable
 {
   if(@this==1)

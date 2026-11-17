@@ -39,13 +39,14 @@ export testfunction InitTestCondition()
   testWaitForTimeout(500);
 }
 
+//转速系统变量复位
 export testfunction ResetEngineSpeed()
 {
   @Vehicle_Control::Eng_Speed = 0;
 }
 
 /* -------------------------------------------------------------------------
- * 周期时间测试用例
+ * 周期时间测试用例 检测报文的绝对周期是否落在 40～60 ms 内
  * ------------------------------------------------------------------------- */
 
 export testcase CheckMsgEngineData()
@@ -184,7 +185,7 @@ export testcase CheckEngine_Speed()
 }
 
 /* -------------------------------------------------------------------------
- * 执行一次周期时间检查
+ * 执行一次周期时间检查 周期检测“等待—取统计—判定—销毁”
  * ------------------------------------------------------------------------- */
 
 CheckMsgCyc(dword aCheckId, float aMinCycleTime, float aMaxCycleTime)

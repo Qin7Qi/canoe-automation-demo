@@ -2,15 +2,15 @@
 /*
  * DiagnosisTest_Lib.can
  *
- * CAPL test library for the Chapter 15 diagnostic tests.
- * The XML Test Module DiagnosisTest.vxt owns the hierarchy and selection.
+ * 用于第 15 章诊断测试的 CAPL 测试库。
+ * 测试层级结构与测试项选择由 XML 测试模块 DiagnosisTest.vxt 进行管理。
  *
- * This file must NOT contain a MainTest() function.
+ * 本文件不得包含 MainTest() 函数。
  *
- * Nodes/IPC.can remains the simulated ECU. Nodes/Tester.can is no longer
- * required: its vehicle start-up sequence moved to InitDiagnosis() below, and
- * its panel read/write logic moved to the exported diagnostic test cases.
- * This library sends diagnostic requests and checks the responses directly.
+ * Nodes/IPC.can 仍作为被模拟的 ECU。
+ * 不再需要 Nodes/Tester.can：其车辆启动序列已移至下方的
+ * InitDiagnosis() 函数中，而其面板读写逻辑则已迁移至各导
+ * 出的诊断测试用例内。本测试库直接发送诊断请求并验证响应。
  */
 
 includes
@@ -19,11 +19,11 @@ includes
 
 variables
 {
-  dword gTestStep;
+  dword gTestStep;  //当前测试步骤号计数
   const dword RESPONSE_TIMEOUT = 15000;
   const dword SENDING_TIMEOUT  = 20000;
 
-  char TEST_STEP[4] = "000";
+  char TEST_STEP[4] = "000";  //步骤号字符串
 
   byte VIN[17] =
   {
@@ -40,9 +40,10 @@ variables
 }
 
 /* =========================================================================
- * Initialization called from XML <preparation>
+ * 由 XML <preparation> 触发的初始化
  * ========================================================================= */
 
+//诊断测试的前置初始化
 export testfunction InitDiagnosis()
 {
   diagSetTarget("IPC");
@@ -51,8 +52,8 @@ export testfunction InitDiagnosis()
   @Vehicle_Key::Car_Driver = 0;
   @Vehicle_Key::Key_State  = 3;
 
-  // The BCM simulation changes Key_State from 3 (Crank) to 2 (RUN) after
-  // about 800 ms. Wait long enough for the nodes and diagnostic layer.
+  // BCM 仿真会在约 800 毫秒后将 Key_State 从 3（启动/Crank）更改为 2（运行/RUN）。
+  // 请预留足够的时间，以供各节点及诊断层完成相应处理。
   testWaitForTimeout(2000);
 }
 

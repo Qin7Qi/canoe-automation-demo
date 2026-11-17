@@ -227,6 +227,7 @@ def find_module(canoe, vxt_path):
 
 
 def wait_until(condition, timeout_s, label):
+    """通用轮询等待"""
     deadline = time.time() + timeout_s
     while time.time() < deadline:
         try:
